@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GLS Jolly Brescia - Gestione Rotte</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#001489">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: #f4f6f9; color: #333; display: flex; justify-content: center; min-height: 100vh; padding: 15px; }
+    .container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); height: fit-content; }
+    
+    .header { text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #001489; position: relative; }
+    .header h1 { color: #001489; font-size: 26px; font-weight: 800; }
+    .header span { color: #ffc72c; font-weight: 900; }
+    .header p { color: #666; font-size: 14px; margin-top: 4px; }
+    
+    .btn-toggle { position: absolute; right: 0; top: 0; background: #001489; color: white; border: none; font-size: 12px; font-weight: bold; padding: 8px 12px; border-radius: 20px; cursor: pointer; }
+
+    .form-panel { display: none; background: #f0f4ff; border: 2px solid #001489; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+    .form-panel h3 { font-size: 15px; color: #001489; margin-bottom: 10px; }
+    .form-group { margin-bottom: 10px; }
+    .form-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #555; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background: white; }
+    .btn-save { width: 100%; padding: 12px; background: #001489; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 5px; font-size: 14px; }
+
+    .search-box { margin-bottom: 15px; }
+    .search-input { width: 100%; padding: 12px 15px; font-size: 15px; border: 1px solid #ccc; border-radius: 8px; outline: none; }
+
+    .route-card { 
+      background: #fff; 
+      border: 1px solid #e0e0e0; 
+      border-left: 6px solid #001489; 
+      padding: 14px; 
+      border-radius: 10px; 
+      margin-bottom: 10px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+    }
+    .route-title { font-weight: bold; font-size: 16px; color: #001489; }
+    .route-sub { font-size: 12px; color: #666; margin-top: 4px; }
+    .info-group { display: flex; align-items: center; }
+    .icon-folder { font-size: 24px; margin-right: 12px; }
+    .actions { display: flex; align-items: center; gap: 8px; }
+    .btn-open { background: #001489; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; }
+    .btn-delete { background: #d32f2f; color: white; border: none; padding: 8px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+
+    .empty-state { text-align: center; color: #888; padding: 30px 10px; font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <button class="btn-toggle" onclick="toggleForm()">+ Nuova Cartella</button>
+    <h1>GLS <span>Jolly</span></h1>
+    <p>Gestione Rotte Brescia</p>
+  </div>
+
+  <div id="form-panel" class="form-panel">
+    <h3>Crea Nuova Cartella Rotta</h3>
+    <div class="form-group">
+      <label>Nome Cartella / Zona (es. BS 01 - Centro):</label>
+      <input type="text" id="zona-title" class="form-control" placeholder="Inserisci il nome">
+    </div>
+    <div class="form-group">
+      <label>Seleziona File PDF:</label>
+      <input type="file" id="pdf-file" class="form-control" accept="application/pdf">
+    </div>
+    <button class="btn-save" onclick="saveFolder()">Salva Cartella</button>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="search" class="search-input" placeholder="🔍 Cerca cartella..." onkeyup="filterRoutes()">
+  </div>
+
+  <div id="routes-list"></div>
+</div>
+
+<script>
+  let rotteDB = JSON.parse(localStorage.getItem('gls_rotte_db')) || [];
+
+  function toggleForm() {
+    const panel = document.getElementById('form-panel');
+    panel.style.display = (panel.style.display === 'block') ? 'none' : 'block';
+  }
+
+  function saveFolder() {
+    const title = document.getElementById('zona-title').value.trim();
+    const fileInput = document.getElementById('pdf-file');
+    const file = fileInput.files[0];
+
+    if (!title || !file) {
+      alert("Inserisci sia il nome della cartella che il file PDF.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const newRoute = {
+        id: Date.now(),
+        codiceZona: title,
+        pdfData: e.target.result,
+        updatedAt: new Date().toLocaleDateString('it-IT')
+      };
+
+      rotteDB.push(newRoute);
+      localStorage.setItem('gls_rotte_db', JSON.stringify(rotteDB));
+
+      document.getElementById('zona-title').value = '';
+      fileInput.value = '';
+      toggleForm();
+      loadRoutes();
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  function loadRoutes() {
+    rotteDB.sort((a, b) => a.codiceZona.localeCompare(b.codiceZona));
+    renderList(rotteDB);
+  }
+
+  // Convertitore Base64 a Blob per la corretta apertura del PDF su Mobile
+  function openPdf(base64Data) {
+    const base64Parts = base64Data.split(',');
+    const fileType = base64Parts[0].match(/:(.*?);/)[1];
+    const rawLength = atob(base64Parts[1]).length;
+    const array = new Uint8Array(new ArrayBuffer(rawLength));
+
+    for (let i = 0; i < rawLength; i++) {
+      array[i] = atob(base64Parts[1]).charCodeAt(i);
+    }
+
+    const blob = new Blob([array], { type: fileType });
+    const blobUrl = URL.createObjectURL(blob);
+    
+    // Apre in una nuova scheda pulita e compatibile con iOS/Android
+    window.open(blobUrl, '_blank');
+  }
+
+  function renderList(list) {
+    const container = document.getElementById('routes-list');
+    if (list.length === 0) {
+      container.innerHTML = `<div class="empty-state">Nessuna cartella presente. Clicca su "+ Nuova Cartella" per crearne una.</div>`;
+      return;
+    }
+
+    container.innerHTML = '';
+    list.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'route-card';
+      card.innerHTML = `
+        <div class="info-group">
+          <span class="icon-folder">📁</span>
+          <div>
+            <div class="route-title">${r.codiceZona}</div>
+            <div class="route-sub">Aggiornato: ${r.updatedAt}</div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn-open" onclick="openPdf('${r.pdfData}')">Apri PDF</button>
+          <button class="btn-delete" onclick="deleteFolder(${r.id})">🗑️</button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function deleteFolder(id) {
+    if (confirm("Vuoi davvero eliminare questa cartella?")) {
+      rotteDB = rotteDB.filter(item => item.id !== id);
+      localStorage.setItem('gls_rotte_db', JSON.stringify(rotteDB));
+      loadRoutes();
+    }
+  }
+
+  function filterRoutes() {
+    const query = document.getElementById('search').value.toLowerCase();
+    const filtered = rotteDB.filter(r => r.codiceZona.toLowerCase().includes(query));
+    renderList(filtered);
+  }
+
+  loadRoutes();
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+</script>
+
+</body>
+</html>
