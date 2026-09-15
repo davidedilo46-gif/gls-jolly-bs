@@ -61,7 +61,7 @@
 
   <!-- Cerca Rotta -->
   <div class="search-box">
-    <input type="text" id="search" class="search-input" placeholder="🔍 Cerca rotta (es. SA, DA)..." onkeyup="filterRoutes()">
+    <input type="text" id="search" class="search-input" placeholder="🔍 Cerca rotta o comune..." onkeyup="filterRoutes()">
   </div>
 
   <!-- Lista Rotte -->
@@ -71,18 +71,25 @@
 <script>
   /* 
     ======================================================
-    ELENCO DELLE ROTTE PRE-CARICATE
-    Puoi aggiungere o rimuovere righe da questo elenco.
-    Se metti i file PDF nella stessa cartella di index.html, 
-    inserisci direttamente il nome del file (es: 'ROTTA SA.pdf').
+    ELENCO COMPLETO ROTTE GLS BRESCIA (15 ROTTE)
     ======================================================
   */
   const ROTTE = [
-    { codice: "ROTTA SA", pdf: "ROTTA SA.pdf" },
-    { codice: "ROTTA DA", pdf: "Rotta DA.pdf" },
-    { codice: "ROTTA BS", pdf: "ROTTA BS.pdf" },
-    { codice: "ROTTA MB", pdf: "ROTTA MB.pdf" },
-    { codice: "ROTTA BG", pdf: "ROTTA BG.pdf" }
+    { codice: "ROTTA BE", zona: "Calcinato - Ponte San Marco", pdf: "ROTTA BE.pdf" },
+    { codice: "ROTTA BI", zona: "Gavardo - Soprazocco - San Biagio", pdf: "ROTTA BI.pdf" },
+    { codice: "ROTTA BJ", zona: "Gavardo - Vallio Terme - Villanuova", pdf: "ROTTA BJ.pdf" },
+    { codice: "ROTTA BK", zona: "Villanuova s/C - Roè Volciano", pdf: "ROTTA BK.pdf" },
+    { codice: "ROTTA CA-CC", zona: "Castel Mella - Roncadelle", pdf: "ROTTA CA-CC.pdf" },
+    { codice: "ROTTA CF", zona: "Poncarale - Montirone", pdf: "ROTTA CF.pdf" },
+    { codice: "ROTTA DA", zona: "Lonato del Garda", pdf: "ROTTA DA.pdf" },
+    { codice: "ROTTA DF", zona: "Desenzano - San Martino - Pozzolengo", pdf: "ROTTA DF.pdf" },
+    { codice: "ROTTA SA", zona: "Odolo - Preseglie - Agnosine - Bione", pdf: "ROTTA SA.pdf" },
+    { codice: "ROTTA SB", zona: "Vestone - Nozza", pdf: "ROTTA SB.pdf" },
+    { codice: "ROTTA TD", zona: "Villa Carcina", pdf: "ROTTA TD.pdf" },
+    { codice: "ROTTA TN", zona: "Cellatica - Gussago - Mandolossa", pdf: "ROTTA TN.pdf" },
+    { codice: "ROTTA VM", zona: "Alta Valle (Monno, Vezza, Temù, Vione)", pdf: "ROTTA VM.pdf" },
+    { codice: "ROTTA XC", zona: "Salò (Centro, ZTL e Collinare)", pdf: "ROTTA XC.pdf" },
+    { codice: "ROTTA XD-XH", zona: "Puegnago - Salò - San Felice - Portese", pdf: "ROTTA XD-XH.pdf" }
   ];
 
   function renderRoutes(data) {
@@ -94,20 +101,20 @@
       return;
     }
 
-    // Ordina in ordine alfabetico per Codice Rotta
+    // Ordina alfabeticamente per Codice Rotta
     data.sort((a, b) => a.codice.localeCompare(b.codice));
 
     data.forEach(r => {
       const card = document.createElement('a');
       card.className = 'route-card';
-      card.href = encodeRFC3986URIComponent(r.pdf); // Gestisce gli spazi nel nome del file
-      card.target = "_blank"; // Apre il PDF in una nuova scheda
+      card.href = encodeRFC3986URIComponent(r.pdf);
+      card.target = "_blank";
       card.innerHTML = `
         <div class="info-group">
           <span class="icon-folder">📁</span>
           <div>
             <div class="route-title">${r.codice}</div>
-            <div class="route-sub">Aggiornato in tempo reale</div>
+            <div class="route-sub">${r.zona}</div>
           </div>
         </div>
         <div class="btn-open">Apri PDF</div>
@@ -116,7 +123,7 @@
     });
   }
 
-  // Funzione per gestire correttamente gli spazi nei nomi dei file PDF
+  // Gestione spazi e caratteri nei nomi dei file PDF
   function encodeRFC3986URIComponent(str) {
     return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
       return '%' + c.charCodeAt(0).toString(16);
@@ -125,14 +132,17 @@
 
   function filterRoutes() {
     const query = document.getElementById('search').value.toLowerCase();
-    const filtered = ROTTE.filter(r => r.codice.toLowerCase().includes(query));
+    const filtered = ROTTE.filter(r => 
+      r.codice.toLowerCase().includes(query) || 
+      r.zona.toLowerCase().includes(query)
+    );
     renderRoutes(filtered);
   }
 
   // Avvio
   renderRoutes(ROTTE);
 
-  // Registrazione Service Worker per PWA
+  // Registrazione Service Worker PWA
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
   }
