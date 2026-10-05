@@ -49,6 +49,7 @@
     .btn-nav { background: #2e7d32; color: white; padding: 8px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; text-decoration: none; }
     .btn-back { background: #666; color: white; width: 100%; margin-bottom: 15px; }
     .btn-confirm { background: #001489; color: white; width: 100%; padding: 14px; font-size: 16px; margin-top: 15px; }
+    .empty-state { text-align: center; color: #888; padding: 20px; }
   </style>
 </head>
 <body>
@@ -67,7 +68,7 @@
     <div id="routes-list"></div>
   </div>
 
-  <!-- VISTA 2: SELEZIONE VIE DI OGGI (TOGLI SPUNTA) -->
+  <!-- VISTA 2: SELEZIONE VIE DI OGGI -->
   <div id="view-select" class="view-section">
     <button class="btn btn-back" onclick="showHome()">← Torna all'elenco rotte</button>
     <h3 id="select-title" style="color:#001489; margin-bottom: 5px;"></h3>
@@ -76,7 +77,7 @@
     <button class="btn btn-confirm" onclick="startNavigation()">Conferma e Avvia Giro ➔</button>
   </div>
 
-  <!-- VISTA 3: GIRO ATTIVO E NAVIGATORE MAPS -->
+  <!-- VISTA 3: GIRO ATTIVO CON MAPS -->
   <div id="view-nav" class="view-section">
     <button class="btn btn-back" onclick="showSelect()">← Modifica selezione vie</button>
     <h3 id="nav-title" style="color:#001489; margin-bottom: 15px;">Giro di Oggi</h3>
@@ -85,44 +86,32 @@
 </div>
 
 <script>
-  // DATABASE ROTTE E VIE (Esempio strutturato)
+  // DATABASE COMPLETO DELLE 18 ROTTE
   const ROTTE = [
     { 
-      codice: "ROTTA BE", 
-      zona: "Calcinato - Ponte San Marco", 
-      pdf: "ROTTA BE.pdf",
-      vie: [
-        "Via Boscone, Calcinato BS", "Via Statale, Calcinato BS", "Via Sibilla Aleramo, Calcinato BS", 
-        "Via Cavicchione Sopra, Calcinato BS", "Via Cavicchione di Sotto, Calcinato BS", 
-        "Via Gavardina di Sopra, Calcinato BS", "Via Gavardina Nord, Calcinato BS", "Via Campagnola, Calcinato BS", 
-        "Ponte San Marco, Via Statale 196 BS", "Via Patrioti 16, Ponte San Marco BS", "Via C. Cattaneo, Ponte San Marco BS", 
-        "Via Privata del Colle, Ponte San Marco BS", "Via della Resistenza, Calcinato BS", "Località Sant'Anna, Rovadino BS", 
-        "Via Romanelli, Ponte San Marco BS", "Via Sottopassaggio, Calcinato BS", "Via Enrico Berlinguer, Calcinato BS", 
-        "Via Stazione, Calcinato BS", "Via Enrico Fermi 10, Calcinato BS", "Via Galileo Galilei, Calcinato BS", 
-        "Via I Maggio, Calcinato BS", "Via Giacomo Matteotti, Calcinato BS", "Via Quintino Sella, Calcinato BS", 
-        "Via Carlo Alberto, Calcinato BS", "Via della Filanda, Calcinato BS", "Via Duca degli Abruzzi, Calcinato BS", 
-        "Via S. Germano, Calcinato BS", "Via Mercanti, Calcinato BS", "Via C. Cavour, Calcinato BS"
-      ]
+      codice: "ROTTA BE", zona: "Calcinato - Ponte San Marco", pdf: "ROTTA BE.pdf",
+      vie: ["Via Boscone, Calcinato BS", "Via Statale, Calcinato BS", "Via Sibilla Aleramo, Calcinato BS", "Via Cavicchione Sopra, Calcinato BS", "Via Cavicchione di Sotto, Calcinato BS", "Via Gavardina di Sopra, Calcinato BS", "Via Gavardina Nord, Calcinato BS", "Via Campagnola, Calcinato BS", "Ponte San Marco, Via Statale 196 BS", "Via Patrioti 16, Ponte San Marco BS", "Via C. Cattaneo, Ponte San Marco BS", "Via Privata del Colle, Ponte San Marco BS", "Via della Resistenza, Calcinato BS", "Località Sant'Anna, Rovadino BS", "Via Romanelli, Ponte San Marco BS", "Via Sottopassaggio, Calcinato BS", "Via Enrico Berlinguer, Calcinato BS", "Via Stazione, Calcinato BS", "Via Enrico Fermi 10, Calcinato BS", "Via Galileo Galilei, Calcinato BS", "Via I Maggio, Calcinato BS", "Via Giacomo Matteotti, Calcinato BS", "Via Quintino Sella, Calcinato BS", "Via Carlo Alberto, Calcinato BS", "Via della Filanda, Calcinato BS", "Via Duca degli Abruzzi, Calcinato BS", "Via S. Germano, Calcinato BS", "Via Mercanti, Calcinato BS", "Via C. Cavour, Calcinato BS"]
     },
+    { codice: "ROTTA BI", zona: "Gavardo - Soprazocco - San Biagio", pdf: "ROTTA BI.pdf", vie: [] },
+    { codice: "ROTTA BJ", zona: "Gavardo - Vallio Terme - Villanuova", pdf: "ROTTA BJ.pdf", vie: [] },
+    { codice: "ROTTA BK", zona: "Villanuova s/C - Roè Volciano", pdf: "ROTTA BK.pdf", vie: [] },
+    { codice: "ROTTA CA-CC", zona: "Castel Mella - Roncadelle", pdf: "ROTTA CA-CC.pdf", vie: [] },
+    { codice: "ROTTA CF", zona: "Poncarale - Montirone", pdf: "ROTTA CF.pdf", vie: [] },
+    { codice: "ROTTA DA", zona: "Lonato del Garda", pdf: "ROTTA DA.pdf", vie: [] },
+    { codice: "ROTTA DF", zona: "Desenzano - San Martino - Pozzolengo", pdf: "ROTTA DF.pdf", vie: [] },
+    { codice: "ROTTA P2", zona: "Zona P2 Brescia", pdf: "ROTTA P2.pdf", vie: [] },
+    { codice: "ROTTA SA", zona: "Odolo - Preseglie - Agnosine - Bione", pdf: "ROTTA SA.pdf", vie: [] },
+    { codice: "ROTTA SB", zona: "Vestone - Nozza", pdf: "ROTTA SB.pdf", vie: [] },
     { 
-      codice: "ROTTA TD", 
-      zona: "Villa Carcina", 
-      pdf: "ROTTA TD.pdf",
-      vie: [
-        "Via Garibaldi, Villa Carcina BS", "Via Giulia Ravelli, Villa Carcina BS", "Via Italia, Villa Carcina BS", 
-        "Via Aldo Moro 29, Villa Carcina BS", "Via Fucine, Villa Carcina BS", "Via Francesco Glisenti, Villa Carcina BS", 
-        "Via Ripe, Villa Carcina BS", "Piazza XX Settembre, Villa Carcina BS", "Via Pendezza, Villa Carcina BS", 
-        "Via Lazio, Villa Carcina BS", "Via dei Mille, Villa Carcina BS", "Via Trieste, Villa Carcina BS", 
-        "Via Angelo Canossi, Villa Carcina BS", "Via XX Settembre, Villa Carcina BS", "Via Trafilerie, Villa Carcina BS", 
-        "Via Lombardia, Villa Carcina BS", "Via Piemonte, Villa Carcina BS", "Via IV Novembre, Villa Carcina BS", 
-        "Via Cesare Scaluggia, Villa Carcina BS", "Via Giacomo Leopardi, Villa Carcina BS", "Via Sardegna, Villa Carcina BS", 
-        "Via Veneto, Villa Carcina BS", "Via G. Marconi, Villa Carcina BS", "Via A. Murri, Villa Carcina BS", 
-        "Via XXV Aprile, Villa Carcina BS", "Via Giuseppe Verdi, Villa Carcina BS", "Via Alessandro Volta, Villa Carcina BS", 
-        "Via Giovanni XXIII, Villa Carcina BS", "Via Fiume Mella, Villa Carcina BS", "Via Volontariato, Villa Carcina BS", 
-        "Via Antonio Bernocchi, Villa Carcina BS", "Via Galileo Galilei, Villa Carcina BS", "Via Monte Guglielmo, Villa Carcina BS"
-      ]
-    }
-    // Si possono aggiungere le vie per tutte le altre rotte
+      codice: "ROTTA TD", zona: "Villa Carcina", pdf: "ROTTA TD.pdf",
+      vie: ["Via Garibaldi, Villa Carcina BS", "Via Giulia Ravelli, Villa Carcina BS", "Via Italia, Villa Carcina BS", "Via Aldo Moro 29, Villa Carcina BS", "Via Fucine, Villa Carcina BS", "Via Francesco Glisenti, Villa Carcina BS", "Via Ripe, Villa Carcina BS", "Piazza XX Settembre, Villa Carcina BS", "Via Pendezza, Villa Carcina BS", "Via Lazio, Villa Carcina BS", "Via dei Mille, Villa Carcina BS", "Via Trieste, Villa Carcina BS", "Via Angelo Canossi, Villa Carcina BS", "Via XX Settembre, Villa Carcina BS", "Via Trafilerie, Villa Carcina BS", "Via Lombardia, Villa Carcina BS", "Via Piemonte, Villa Carcina BS", "Via IV Novembre, Villa Carcina BS", "Via Cesare Scaluggia, Villa Carcina BS", "Via Giacomo Leopardi, Villa Carcina BS", "Via Sardegna, Villa Carcina BS", "Via Veneto, Villa Carcina BS", "Via G. Marconi, Villa Carcina BS", "Via A. Murri, Villa Carcina BS", "Via XXV Aprile, Villa Carcina BS", "Via Giuseppe Verdi, Villa Carcina BS", "Via Alessandro Volta, Villa Carcina BS", "Via Giovanni XXIII, Villa Carcina BS", "Via Fiume Mella, Villa Carcina BS", "Via Volontariato, Villa Carcina BS", "Via Antonio Bernocchi, Villa Carcina BS", "Via Galileo Galilei, Villa Carcina BS", "Via Monte Guglielmo, Villa Carcina BS"]
+    },
+    { codice: "ROTTA TN", zona: "Cellatica - Gussago - Mandolossa", pdf: "ROTTA TN.pdf", vie: [] },
+    { codice: "ROTTA VM", zona: "Alta Valle (Monno, Vezza, Temù, Vione)", pdf: "ROTTA VM.pdf", vie: [] },
+    { codice: "ROTTA XC", zona: "Salò (Centro, ZTL e Collinare)", pdf: "ROTTA XC.pdf", vie: [] },
+    { codice: "ROTTA XD-XH", zona: "Puegnago - Salò - San Felice - Portese", pdf: "ROTTA XD-XH.pdf", vie: [] },
+    { codice: "ROTTA XF", zona: "Zona XF Brescia / Lago", pdf: "ROTTA XF.pdf", vie: [] },
+    { codice: "ROTTA XG", zona: "Zona XG Brescia / Lago", pdf: "ROTTA XG.pdf", vie: [] }
   ];
 
   let currentRoute = null;
@@ -132,6 +121,8 @@
     const list = document.getElementById('routes-list');
     list.innerHTML = '';
 
+    data.sort((a, b) => a.codice.localeCompare(b.codice));
+
     data.forEach((r, idx) => {
       const card = document.createElement('div');
       card.className = 'route-card';
@@ -139,11 +130,17 @@
         <div class="route-title">${r.codice}</div>
         <div class="route-sub">${r.zona}</div>
         <div class="btn-group">
-          <a href="${r.pdf}" target="_blank" class="btn btn-pdf">Apri PDF</a>
+          <a href="${encodeRFC3986URIComponent(r.pdf)}" target="_blank" class="btn btn-pdf">Apri PDF</a>
           <button class="btn btn-run" onclick="openSelectView(${idx})">🚀 Inizia Giro</button>
         </div>
       `;
       list.appendChild(card);
+    });
+  }
+
+  function encodeRFC3986URIComponent(str) {
+    return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+      return '%' + c.charCodeAt(0).toString(16);
     });
   }
 
@@ -155,7 +152,7 @@
     container.innerHTML = '';
 
     if (!currentRoute.vie || currentRoute.vie.length === 0) {
-      container.innerHTML = `<p style="color:#888;">Elenco vie in fase di caricamento per questa rotta. Utilizza il tasto "Apri PDF".</p>`;
+      container.innerHTML = `<div class="empty-state">L'elenco vie interattivo per questa rotta è in fase di inserimento. Puoi consultare la rotta completa premendo <b>"Apri PDF"</b>.</div>`;
       return;
     }
 
