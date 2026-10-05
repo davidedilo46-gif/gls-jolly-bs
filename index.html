@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GLS Jolly Brescia - Rotte</title>
+  <title>GLS Jolly Brescia - Rotte & Mappe</title>
   
-  <!-- Configurazione PWA con Icona PNG -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#001489">
   <link rel="icon" href="icon.png" type="image/png">
@@ -16,39 +15,40 @@
     body { background-color: #f4f6f9; color: #333; display: flex; justify-content: center; min-height: 100vh; padding: 15px; }
     .container { width: 100%; max-width: 500px; background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); height: fit-content; }
     
-    /* Header GLS */
     .header { text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #001489; }
-    .header h1 { color: #001489; font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+    .header h1 { color: #001489; font-size: 26px; font-weight: 800; }
     .header span { color: #ffc72c; font-weight: 900; }
     .header p { color: #666; font-size: 14px; margin-top: 4px; }
 
-    /* Barra di ricerca */
     .search-box { margin-bottom: 15px; }
     .search-input { width: 100%; padding: 12px 15px; font-size: 15px; border: 1px solid #ccc; border-radius: 8px; outline: none; }
-    .search-input:focus { border-color: #001489; }
 
-    /* Cartelle Rotte */
-    .route-card { 
-      background: #fff; 
-      border: 1px solid #e0e0e0; 
-      border-left: 6px solid #001489; 
-      padding: 14px 16px; 
-      border-radius: 10px; 
-      margin-bottom: 10px; 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      text-decoration: none; 
-      color: inherit; 
-      transition: background 0.2s; 
-    }
-    .route-card:active { background: #eef2ff; }
+    /* Schermate */
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+
+    /* Card Rotte */
+    .route-card { background: #fff; border: 1px solid #e0e0e0; border-left: 6px solid #001489; padding: 14px 16px; border-radius: 10px; margin-bottom: 10px; }
     .route-title { font-weight: bold; font-size: 16px; color: #001489; }
     .route-sub { font-size: 12px; color: #666; margin-top: 4px; }
-    .info-group { display: flex; align-items: center; }
-    .icon-folder { font-size: 24px; margin-right: 12px; }
-    .btn-open { background: #001489; color: white; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: bold; }
-    .empty-state { text-align: center; color: #888; padding: 30px 10px; font-size: 14px; }
+    .btn-group { display: flex; gap: 8px; margin-top: 10px; }
+    .btn { padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; border: none; cursor: pointer; text-decoration: none; text-align: center; }
+    .btn-pdf { background: #eef2ff; color: #001489; border: 1px solid #001489; flex: 1; }
+    .btn-run { background: #001489; color: white; flex: 1.5; }
+
+    /* Lista Selezione Vie */
+    .stop-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; }
+    .stop-item label { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 500; width: 100%; cursor: pointer; }
+    .stop-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: #001489; }
+    
+    /* Lista Navigazione */
+    .nav-card { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .nav-card.done { background: #e8f5e9; border-color: #81c784; opacity: 0.6; }
+    .nav-card.done .stop-name { text-decoration: line-through; }
+    .stop-num { background: #001489; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; margin-right: 10px; }
+    .btn-nav { background: #2e7d32; color: white; padding: 8px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; text-decoration: none; }
+    .btn-back { background: #666; color: white; width: 100%; margin-bottom: 15px; }
+    .btn-confirm { background: #001489; color: white; width: 100%; padding: 14px; font-size: 16px; margin-top: 15px; }
   </style>
 </head>
 <body>
@@ -59,93 +59,179 @@
     <p>Elenco Rotte Brescia</p>
   </div>
 
-  <!-- Cerca Rotta -->
-  <div class="search-box">
-    <input type="text" id="search" class="search-input" placeholder="🔍 Cerca rotta o comune..." onkeyup="filterRoutes()">
+  <!-- VISTA 1: LISTA ROTTE PRINCIPALE -->
+  <div id="view-home" class="view-section active">
+    <div class="search-box">
+      <input type="text" id="search" class="search-input" placeholder="🔍 Cerca rotta..." onkeyup="filterRoutes()">
+    </div>
+    <div id="routes-list"></div>
   </div>
 
-  <!-- Lista Rotte -->
-  <div id="routes-list"></div>
+  <!-- VISTA 2: SELEZIONE VIE DI OGGI (TOGLI SPUNTA) -->
+  <div id="view-select" class="view-section">
+    <button class="btn btn-back" onclick="showHome()">← Torna all'elenco rotte</button>
+    <h3 id="select-title" style="color:#001489; margin-bottom: 5px;"></h3>
+    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Deseleziona le vie dove OGGI non hai pacchi:</p>
+    <div id="stops-checkboxes"></div>
+    <button class="btn btn-confirm" onclick="startNavigation()">Conferma e Avvia Giro ➔</button>
+  </div>
+
+  <!-- VISTA 3: GIRO ATTIVO E NAVIGATORE MAPS -->
+  <div id="view-nav" class="view-section">
+    <button class="btn btn-back" onclick="showSelect()">← Modifica selezione vie</button>
+    <h3 id="nav-title" style="color:#001489; margin-bottom: 15px;">Giro di Oggi</h3>
+    <div id="nav-list"></div>
+  </div>
 </div>
 
 <script>
-  /* 
-    ======================================================
-    ELENCO COMPLETO ROTTE GLS BRESCIA (18 ROTTE TOTALI)
-    ======================================================
-  */
+  // DATABASE ROTTE E VIE (Esempio strutturato)
   const ROTTE = [
-    { codice: "ROTTA BE", zona: "Calcinato - Ponte San Marco", pdf: "ROTTA BE.pdf" },
-    { codice: "ROTTA BI", zona: "Gavardo - Soprazocco - San Biagio", pdf: "ROTTA BI.pdf" },
-    { codice: "ROTTA BJ", zona: "Gavardo - Vallio Terme - Villanuova", pdf: "ROTTA BJ.pdf" },
-    { codice: "ROTTA BK", zona: "Villanuova s/C - Roè Volciano", pdf: "ROTTA BK.pdf" },
-    { codice: "ROTTA CA-CC", zona: "Castel Mella - Roncadelle", pdf: "ROTTA CA-CC.pdf" },
-    { codice: "ROTTA CF", zona: "Poncarale - Montirone", pdf: "ROTTA CF.pdf" },
-    { codice: "ROTTA DA", zona: "Lonato del Garda", pdf: "ROTTA DA.pdf" },
-    { codice: "ROTTA DF", zona: "Desenzano - San Martino - Pozzolengo", pdf: "ROTTA DF.pdf" },
-    { codice: "ROTTA P2", zona: "Zona P2 Brescia", pdf: "ROTTA P2.pdf" },
-    { codice: "ROTTA SA", zona: "Odolo - Preseglie - Agnosine - Bione", pdf: "ROTTA SA.pdf" },
-    { codice: "ROTTA SB", zona: "Vestone - Nozza", pdf: "ROTTA SB.pdf" },
-    { codice: "ROTTA TD", zona: "Villa Carcina", pdf: "ROTTA TD.pdf" },
-    { codice: "ROTTA TN", zona: "Cellatica - Gussago - Mandolossa", pdf: "ROTTA TN.pdf" },
-    { codice: "ROTTA VM", zona: "Alta Valle (Monno, Vezza, Temù, Vione)", pdf: "ROTTA VM.pdf" },
-    { codice: "ROTTA XC", zona: "Salò (Centro, ZTL e Collinare)", pdf: "ROTTA XC.pdf" },
-    { codice: "ROTTA XD-XH", zona: "Puegnago - Salò - San Felice - Portese", pdf: "ROTTA XD-XH.pdf" },
-    { codice: "ROTTA XF", zona: "Zona XF Brescia / Lago", pdf: "ROTTA XF.pdf" },
-    { codice: "ROTTA XG", zona: "Zona XG Brescia / Lago", pdf: "ROTTA XG.pdf" }
+    { 
+      codice: "ROTTA BE", 
+      zona: "Calcinato - Ponte San Marco", 
+      pdf: "ROTTA BE.pdf",
+      vie: [
+        "Via Boscone, Calcinato BS", "Via Statale, Calcinato BS", "Via Sibilla Aleramo, Calcinato BS", 
+        "Via Cavicchione Sopra, Calcinato BS", "Via Cavicchione di Sotto, Calcinato BS", 
+        "Via Gavardina di Sopra, Calcinato BS", "Via Gavardina Nord, Calcinato BS", "Via Campagnola, Calcinato BS", 
+        "Ponte San Marco, Via Statale 196 BS", "Via Patrioti 16, Ponte San Marco BS", "Via C. Cattaneo, Ponte San Marco BS", 
+        "Via Privata del Colle, Ponte San Marco BS", "Via della Resistenza, Calcinato BS", "Località Sant'Anna, Rovadino BS", 
+        "Via Romanelli, Ponte San Marco BS", "Via Sottopassaggio, Calcinato BS", "Via Enrico Berlinguer, Calcinato BS", 
+        "Via Stazione, Calcinato BS", "Via Enrico Fermi 10, Calcinato BS", "Via Galileo Galilei, Calcinato BS", 
+        "Via I Maggio, Calcinato BS", "Via Giacomo Matteotti, Calcinato BS", "Via Quintino Sella, Calcinato BS", 
+        "Via Carlo Alberto, Calcinato BS", "Via della Filanda, Calcinato BS", "Via Duca degli Abruzzi, Calcinato BS", 
+        "Via S. Germano, Calcinato BS", "Via Mercanti, Calcinato BS", "Via C. Cavour, Calcinato BS"
+      ]
+    },
+    { 
+      codice: "ROTTA TD", 
+      zona: "Villa Carcina", 
+      pdf: "ROTTA TD.pdf",
+      vie: [
+        "Via Garibaldi, Villa Carcina BS", "Via Giulia Ravelli, Villa Carcina BS", "Via Italia, Villa Carcina BS", 
+        "Via Aldo Moro 29, Villa Carcina BS", "Via Fucine, Villa Carcina BS", "Via Francesco Glisenti, Villa Carcina BS", 
+        "Via Ripe, Villa Carcina BS", "Piazza XX Settembre, Villa Carcina BS", "Via Pendezza, Villa Carcina BS", 
+        "Via Lazio, Villa Carcina BS", "Via dei Mille, Villa Carcina BS", "Via Trieste, Villa Carcina BS", 
+        "Via Angelo Canossi, Villa Carcina BS", "Via XX Settembre, Villa Carcina BS", "Via Trafilerie, Villa Carcina BS", 
+        "Via Lombardia, Villa Carcina BS", "Via Piemonte, Villa Carcina BS", "Via IV Novembre, Villa Carcina BS", 
+        "Via Cesare Scaluggia, Villa Carcina BS", "Via Giacomo Leopardi, Villa Carcina BS", "Via Sardegna, Villa Carcina BS", 
+        "Via Veneto, Villa Carcina BS", "Via G. Marconi, Villa Carcina BS", "Via A. Murri, Villa Carcina BS", 
+        "Via XXV Aprile, Villa Carcina BS", "Via Giuseppe Verdi, Villa Carcina BS", "Via Alessandro Volta, Villa Carcina BS", 
+        "Via Giovanni XXIII, Villa Carcina BS", "Via Fiume Mella, Villa Carcina BS", "Via Volontariato, Villa Carcina BS", 
+        "Via Antonio Bernocchi, Villa Carcina BS", "Via Galileo Galilei, Villa Carcina BS", "Via Monte Guglielmo, Villa Carcina BS"
+      ]
+    }
+    // Si possono aggiungere le vie per tutte le altre rotte
   ];
+
+  let currentRoute = null;
+  let activeStops = [];
 
   function renderRoutes(data) {
     const list = document.getElementById('routes-list');
     list.innerHTML = '';
 
-    if (data.length === 0) {
-      list.innerHTML = `<div class="empty-state">Nessuna rotta trovata.</div>`;
-      return;
-    }
-
-    // Ordina alfabeticamente per Codice Rotta
-    data.sort((a, b) => a.codice.localeCompare(b.codice));
-
-    data.forEach(r => {
-      const card = document.createElement('a');
+    data.forEach((r, idx) => {
+      const card = document.createElement('div');
       card.className = 'route-card';
-      card.href = encodeRFC3986URIComponent(r.pdf);
-      card.target = "_blank";
       card.innerHTML = `
-        <div class="info-group">
-          <span class="icon-folder">📁</span>
-          <div>
-            <div class="route-title">${r.codice}</div>
-            <div class="route-sub">${r.zona}</div>
-          </div>
+        <div class="route-title">${r.codice}</div>
+        <div class="route-sub">${r.zona}</div>
+        <div class="btn-group">
+          <a href="${r.pdf}" target="_blank" class="btn btn-pdf">Apri PDF</a>
+          <button class="btn btn-run" onclick="openSelectView(${idx})">🚀 Inizia Giro</button>
         </div>
-        <div class="btn-open">Apri PDF</div>
       `;
       list.appendChild(card);
     });
   }
 
-  // Gestione caratteri speciali e spazi nei nomi dei file PDF
-  function encodeRFC3986URIComponent(str) {
-    return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
-      return '%' + c.charCodeAt(0).toString(16);
+  function openSelectView(index) {
+    currentRoute = ROTTE[index];
+    document.getElementById('select-title').innerText = currentRoute.codice;
+    
+    const container = document.getElementById('stops-checkboxes');
+    container.innerHTML = '';
+
+    if (!currentRoute.vie || currentRoute.vie.length === 0) {
+      container.innerHTML = `<p style="color:#888;">Elenco vie in fase di caricamento per questa rotta. Utilizza il tasto "Apri PDF".</p>`;
+      return;
+    }
+
+    currentRoute.vie.forEach((via, i) => {
+      const item = document.createElement('div');
+      item.className = 'stop-item';
+      item.innerHTML = `
+        <label>
+          <input type="checkbox" value="${via}" checked>
+          <span>${via}</span>
+        </label>
+      `;
+      container.appendChild(item);
     });
+
+    switchView('view-select');
   }
+
+  function startNavigation() {
+    const checkboxes = document.querySelectorAll('#stops-checkboxes input[type="checkbox"]:checked');
+    activeStops = Array.from(checkboxes).map(cb => cb.value);
+
+    if (activeStops.length === 0) {
+      alert("Seleziona almeno una via per iniziare il giro.");
+      return;
+    }
+
+    const container = document.getElementById('nav-list');
+    container.innerHTML = '';
+
+    activeStops.forEach((via, i) => {
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(via)}`;
+      const card = document.createElement('div');
+      card.className = 'nav-card';
+      card.id = `nav-card-${i}`;
+      card.innerHTML = `
+        <div style="display:flex; align-items:center;">
+          <div class="stop-num">${i + 1}</div>
+          <div class="stop-name" style="font-weight:600; font-size:14px;">${via}</div>
+        </div>
+        <div style="display:flex; gap:5px; align-items:center;">
+          <a href="${mapsUrl}" target="_blank" class="btn-nav">📍 Maps</a>
+          <input type="checkbox" style="width:22px; height:22px;" onchange="toggleDone(${i}, this.checked)">
+        </div>
+      `;
+      container.appendChild(card);
+    });
+
+    switchView('view-nav');
+  }
+
+  function toggleDone(index, isDone) {
+    const card = document.getElementById(`nav-card-${index}`);
+    if (isDone) {
+      card.classList.add('done');
+    } else {
+      card.classList.remove('done');
+    }
+  }
+
+  function switchView(viewId) {
+    document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+  }
+
+  function showHome() { switchView('view-home'); }
+  function showSelect() { switchView('view-select'); }
 
   function filterRoutes() {
     const query = document.getElementById('search').value.toLowerCase();
-    const filtered = ROTTE.filter(r => 
-      r.codice.toLowerCase().includes(query) || 
-      r.zona.toLowerCase().includes(query)
-    );
+    const filtered = ROTTE.filter(r => r.codice.toLowerCase().includes(query) || r.zona.toLowerCase().includes(query));
     renderRoutes(filtered);
   }
 
-  // Avvio
   renderRoutes(ROTTE);
 
-  // Registrazione Service Worker PWA
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js');
   }
