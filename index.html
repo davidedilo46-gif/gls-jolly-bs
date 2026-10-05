@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GLS Jolly Brescia - Rotte & Mappe</title>
+  <title>GLS Jolly Brescia - Rotte & Civici</title>
   
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#001489">
@@ -23,7 +23,6 @@
     .search-box { margin-bottom: 15px; }
     .search-input { width: 100%; padding: 12px 15px; font-size: 15px; border: 1px solid #ccc; border-radius: 8px; outline: none; }
 
-    /* Schermate */
     .view-section { display: none; }
     .view-section.active { display: block; }
 
@@ -36,17 +35,20 @@
     .btn-pdf { background: #eef2ff; color: #001489; border: 1px solid #001489; flex: 1; }
     .btn-run { background: #001489; color: white; flex: 1.5; }
 
-    /* Lista Selezione Vie */
-    .stop-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; }
-    .stop-item label { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 500; width: 100%; cursor: pointer; }
-    .stop-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: #001489; }
-    
-    /* Lista Navigazione */
+    /* Lista Selezione Vie con Civici */
+    .stop-row { padding: 10px 0; border-bottom: 1px solid #eee; }
+    .stop-header { display: flex; align-items: center; justify-content: space-between; }
+    .stop-header label { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .stop-header input[type="checkbox"] { width: 20px; height: 20px; accent-color: #001489; }
+    .civico-input { width: 100%; margin-top: 6px; padding: 8px; font-size: 13px; border: 1px solid #ccc; border-radius: 6px; outline: none; }
+    .civico-input:focus { border-color: #001489; background: #fafbff; }
+
+    /* Lista Navigazione Giro */
     .nav-card { background: #fff; border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
     .nav-card.done { background: #e8f5e9; border-color: #81c784; opacity: 0.6; }
     .nav-card.done .stop-name { text-decoration: line-through; }
-    .stop-num { background: #001489; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; margin-right: 10px; }
-    .btn-nav { background: #2e7d32; color: white; padding: 8px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; text-decoration: none; }
+    .stop-num { background: #001489; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; margin-right: 10px; flex-shrink: 0; }
+    .btn-nav { background: #2e7d32; color: white; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; text-decoration: none; }
     .btn-back { background: #666; color: white; width: 100%; margin-bottom: 15px; }
     .btn-confirm { background: #001489; color: white; width: 100%; padding: 14px; font-size: 16px; margin-top: 15px; }
     .empty-state { text-align: center; color: #888; padding: 20px; }
@@ -60,7 +62,7 @@
     <p>Elenco Rotte Brescia</p>
   </div>
 
-  <!-- VISTA 1: LISTA ROTTE PRINCIPALE -->
+  <!-- VISTA 1: LISTA ROTTE -->
   <div id="view-home" class="view-section active">
     <div class="search-box">
       <input type="text" id="search" class="search-input" placeholder="🔍 Cerca rotta..." onkeyup="filterRoutes()">
@@ -68,25 +70,24 @@
     <div id="routes-list"></div>
   </div>
 
-  <!-- VISTA 2: SELEZIONE VIE DI OGGI -->
+  <!-- VISTA 2: SELEZIONE VIE E CIVICI DI OGGI -->
   <div id="view-select" class="view-section">
     <button class="btn btn-back" onclick="showHome()">← Torna all'elenco rotte</button>
     <h3 id="select-title" style="color:#001489; margin-bottom: 5px;"></h3>
-    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Deseleziona le vie dove OGGI non hai pacchi:</p>
+    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Deseleziona le vie senza pacchi e inserisci i civici di oggi:</p>
     <div id="stops-checkboxes"></div>
     <button class="btn btn-confirm" onclick="startNavigation()">Conferma e Avvia Giro ➔</button>
   </div>
 
-  <!-- VISTA 3: GIRO ATTIVO CON MAPS -->
+  <!-- VISTA 3: GIRO ATTIVO CON CIVICI SU MAPS -->
   <div id="view-nav" class="view-section">
-    <button class="btn btn-back" onclick="showSelect()">← Modifica selezione vie</button>
+    <button class="btn btn-back" onclick="showSelect()">← Modifica selezione / civici</button>
     <h3 id="nav-title" style="color:#001489; margin-bottom: 15px;">Giro di Oggi</h3>
     <div id="nav-list"></div>
   </div>
 </div>
 
 <script>
-  // DATABASE COMPLETO DELLE ROTTE
   const ROTTE = [
     { 
       codice: "ROTTA BE", zona: "Calcinato - Ponte San Marco", pdf: "ROTTA BE.pdf",
@@ -154,7 +155,6 @@
   ];
 
   let currentRoute = null;
-  let activeStops = [];
 
   function renderRoutes(data) {
     const list = document.getElementById('routes-list');
@@ -197,12 +197,15 @@
 
     currentRoute.vie.forEach((via, i) => {
       const item = document.createElement('div');
-      item.className = 'stop-item';
+      item.className = 'stop-row';
       item.innerHTML = `
-        <label>
-          <input type="checkbox" value="${via}" checked>
-          <span>${via}</span>
-        </label>
+        <div class="stop-header">
+          <label>
+            <input type="checkbox" id="check-${i}" checked onchange="toggleCivicoInput(${i})">
+            <span>${via}</span>
+          </label>
+        </div>
+        <input type="text" id="civico-${i}" class="civico-input" placeholder="N° Civici di oggi (es: 12, 45/A)...">
       `;
       container.appendChild(item);
     });
@@ -210,27 +213,53 @@
     switchView('view-select');
   }
 
-  function startNavigation() {
-    const checkboxes = document.querySelectorAll('#stops-checkboxes input[type="checkbox"]:checked');
-    activeStops = Array.from(checkboxes).map(cb => cb.value);
+  function toggleCivicoInput(index) {
+    const isChecked = document.getElementById(`check-${index}`).checked;
+    const input = document.getElementById(`civico-${index}`);
+    input.style.display = isChecked ? 'block' : 'none';
+    if (!isChecked) input.value = '';
+  }
 
-    if (activeStops.length === 0) {
+  function startNavigation() {
+    const container = document.getElementById('nav-list');
+    container.innerHTML = '';
+
+    let totalStops = [];
+
+    currentRoute.vie.forEach((viaBase, i) => {
+      const isChecked = document.getElementById(`check-${i}`)?.checked;
+      if (isChecked) {
+        const civicoText = document.getElementById(`civico-${i}`)?.value.trim();
+        
+        if (civicoText) {
+          // Se ci sono più civici separati da virgola (es. "12, 14, 25")
+          const civici = civicoText.split(',').map(c => c.trim()).filter(c => c !== '');
+          civici.forEach(c => {
+            // Inserisce il civico prima del nome del comune
+            const partiVia = viaBase.split(',');
+            const viaConCivico = `${partiVia[0]} ${c}, ${partiVia.slice(1).join(',')}`;
+            totalStops.push(viaConCivico);
+          });
+        } else {
+          totalStops.push(viaBase);
+        }
+      }
+    });
+
+    if (totalStops.length === 0) {
       alert("Seleziona almeno una via per iniziare il giro.");
       return;
     }
 
-    const container = document.getElementById('nav-list');
-    container.innerHTML = '';
-
-    activeStops.forEach((via, i) => {
-      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(via)}`;
+    totalStops.forEach((indirizzoCompleto, i) => {
+      const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(indirizzoCompleto)}`;
       const card = document.createElement('div');
       card.className = 'nav-card';
       card.id = `nav-card-${i}`;
       card.innerHTML = `
         <div style="display:flex; align-items:center;">
           <div class="stop-num">${i + 1}</div>
-          <div class="stop-name" style="font-weight:600; font-size:14px;">${via}</div>
+          <div class="stop-name" style="font-weight:600; font-size:14px;">${indirizzoCompleto}</div>
         </div>
         <div style="display:flex; gap:5px; align-items:center;">
           <a href="${mapsUrl}" target="_blank" class="btn-nav">📍 Maps</a>
