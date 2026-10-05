@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GLS Jolly Brescia - Rotte</title>
   
- <!-- Configurazione PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#001489">
-<link rel="icon" href="icon.png" type="image/png">
-<link rel="apple-touch-icon" href="icon.png">
+  <!-- Configurazione PWA con Icona PNG -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#001489">
+  <link rel="icon" href="icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="icon.png">
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -71,7 +71,7 @@
 <script>
   /* 
     ======================================================
-    ELENCO COMPLETO ROTTE GLS BRESCIA (15 ROTTE)
+    ELENCO COMPLETO ROTTE GLS BRESCIA (18 ROTTE TOTALI)
     ======================================================
   */
   const ROTTE = [
@@ -83,13 +83,16 @@
     { codice: "ROTTA CF", zona: "Poncarale - Montirone", pdf: "ROTTA CF.pdf" },
     { codice: "ROTTA DA", zona: "Lonato del Garda", pdf: "ROTTA DA.pdf" },
     { codice: "ROTTA DF", zona: "Desenzano - San Martino - Pozzolengo", pdf: "ROTTA DF.pdf" },
+    { codice: "ROTTA P2", zona: "Zona P2 Brescia", pdf: "ROTTA P2.pdf" },
     { codice: "ROTTA SA", zona: "Odolo - Preseglie - Agnosine - Bione", pdf: "ROTTA SA.pdf" },
     { codice: "ROTTA SB", zona: "Vestone - Nozza", pdf: "ROTTA SB.pdf" },
     { codice: "ROTTA TD", zona: "Villa Carcina", pdf: "ROTTA TD.pdf" },
     { codice: "ROTTA TN", zona: "Cellatica - Gussago - Mandolossa", pdf: "ROTTA TN.pdf" },
     { codice: "ROTTA VM", zona: "Alta Valle (Monno, Vezza, Temù, Vione)", pdf: "ROTTA VM.pdf" },
     { codice: "ROTTA XC", zona: "Salò (Centro, ZTL e Collinare)", pdf: "ROTTA XC.pdf" },
-    { codice: "ROTTA XD-XH", zona: "Puegnago - Salò - San Felice - Portese", pdf: "ROTTA XD-XH.pdf" }
+    { codice: "ROTTA XD-XH", zona: "Puegnago - Salò - San Felice - Portese", pdf: "ROTTA XD-XH.pdf" },
+    { codice: "ROTTA XF", zona: "Zona XF Brescia / Lago", pdf: "ROTTA XF.pdf" },
+    { codice: "ROTTA XG", zona: "Zona XG Brescia / Lago", pdf: "ROTTA XG.pdf" }
   ];
 
   function renderRoutes(data) {
@@ -123,7 +126,7 @@
     });
   }
 
-  // Gestione spazi e caratteri nei nomi dei file PDF
+  // Gestione caratteri speciali e spazi nei nomi dei file PDF
   function encodeRFC3986URIComponent(str) {
     return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
       return '%' + c.charCodeAt(0).toString(16);
